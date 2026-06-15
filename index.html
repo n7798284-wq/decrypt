@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#02050a">
+<title>...</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Cormorant:ital,wght@0,400;0,500;0,600;1,400&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --term:#34f47a;
+    --term-dim:#0f8f43;
+    --bg:#02050a;
+    --ink:#eaf2ff;
+    --gold:#f6e7b8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:var(--bg)}
+  body{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--term);
+    -webkit-font-smoothing:antialiased;
+    touch-action:none;
+  }
+  .screen{position:fixed;inset:0;width:100%;height:100%}
+
+  /* ---------- GATE ---------- */
+  #gate{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:28px;z-index:50;background:var(--bg);text-align:center;padding:0 24px;
+  }
+  #gate .lock{font-size:54px;filter:drop-shadow(0 0 18px var(--term))}
+  #gate .hint{
+    font-size:13px;letter-spacing:3px;color:var(--term-dim);text-transform:uppercase;
+    animation:blink 1.4s steps(2) infinite;
+  }
+  #gate .tap{
+    border:1px solid var(--term);color:var(--term);padding:14px 30px;border-radius:2px;
+    font-size:14px;letter-spacing:2px;background:rgba(52,244,122,.05);
+    box-shadow:0 0 24px rgba(52,244,122,.25), inset 0 0 24px rgba(52,244,122,.06);
+  }
+  @keyframes blink{50%{opacity:.25}}
+
+  /* ---------- TERMINAL ---------- */
+  #term{
+    z-index:40;background:var(--bg);padding:max(34px,env(safe-area-inset-top)) 18px 30px;
+    font-size:13px;line-height:1.55;overflow:hidden;opacity:0;
+    text-shadow:0 0 6px rgba(52,244,122,.45);
+  }
+  #term .out{white-space:pre-wrap;word-break:break-word}
+  #term .ok{color:#fff;text-shadow:0 0 10px #fff}
+  #term .warn{color:#ffd24a;text-shadow:0 0 8px rgba(255,210,74,.6)}
+  #term .dim{color:var(--term-dim)}
+  .bar{display:inline-block;height:9px;width:100%;max-width:240px;border:1px solid var(--term-dim);margin:6px 0;vertical-align:middle;position:relative}
+  .bar>span{display:block;height:100%;background:var(--term);box-shadow:0 0 10px var(--term);width:0%}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--term);box-shadow:0 0 8px var(--term);animation:blink .9s steps(2) infinite;vertical-align:-2px}
+  /* scanlines + crt flicker */
+  #term::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.16) 2px 4px);
+    mix-blend-mode:multiply;animation:flick 6s infinite}
+  @keyframes flick{0%,100%{opacity:.9}50%{opacity:1}}
+
+  /* ---------- GLITCH FLASH ---------- */
+  #flash{z-index:60;background:#fff;opacity:0;pointer-events:none}
+
+  /* ---------- NIGHT ---------- */
+  #night{
+    z-index:30;opacity:0;pointer-events:none;
+    background:
+      radial-gradient(120% 80% at 78% -10%, #1b2b57 0%, transparent 55%),
+      radial-gradient(140% 90% at 18% 115%, #2a1c4a 0%, transparent 60%),
+      linear-gradient(180deg,#040814 0%,#070f24 45%,#0a1430 100%);
+    overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-family:'Cormorant',serif;color:var(--ink);text-align:center;
+    padding:0 28px;
+  }
+  #stars,#stars2{position:absolute;inset:0}
+  .moon{
+    position:absolute;top:9%;right:12%;width:96px;height:96px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff 0%, #f3eecf 38%, #d9cf9a 70%, #b9ad74 100%);
+    box-shadow:0 0 60px 14px rgba(246,231,184,.35), inset -14px -10px 26px rgba(120,108,60,.55);
+  }
+  .moon::before,.moon::after{content:"";position:absolute;border-radius:50%;background:rgba(150,138,90,.35)}
+  .moon::before{width:18px;height:18px;top:24px;left:22px}
+  .moon::after{width:11px;height:11px;top:52px;left:50px;box-shadow:20px -26px 0 -2px rgba(150,138,90,.3)}
+
+  .content{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;gap:6px;transform:translateY(8px)}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:5px;
+    color:#9fb4e6;text-transform:uppercase;opacity:0}
+  .name{
+    font-family:'Cormorant',serif;font-weight:600;font-size:clamp(58px,22vw,108px);
+    line-height:.95;letter-spacing:1px;
+    background:linear-gradient(180deg,#fffdf4,#f6e7b8 60%,#cdb778);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 4px 24px rgba(246,231,184,.25));
+    opacity:0;transform:translateY(18px) scale(.96)
+  }
+  .wish{font-size:clamp(22px,6.4vw,30px);font-weight:400;font-style:italic;color:#dfe7fb;
+    max-width:18ch;line-height:1.35;opacity:0;min-height:2.6em}
+  .wish .c{opacity:0}
+  .sign{font-family:'Caveat',cursive;font-size:26px;color:var(--gold);opacity:0;margin-top:14px;transform:rotate(-3deg)}
+  .heart{display:inline-block;animation:beat 1.6s ease-in-out infinite;color:#ff7a9c}
+  @keyframes beat{0%,100%{transform:scale(1)}30%{transform:scale(1.22)}}
+
+  .twinkle{position:absolute;background:#fff;border-radius:50%;animation:tw var(--d,3s) ease-in-out infinite;opacity:.85}
+  @keyframes tw{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
+
+  .shoot{position:absolute;width:130px;height:2px;background:linear-gradient(90deg,transparent,#fff);
+    border-radius:2px;filter:drop-shadow(0 0 6px #fff);transform:rotate(-32deg);opacity:0}
+  @keyframes shoot{0%{transform:translate(0,0) rotate(-32deg);opacity:0}
+    8%{opacity:1}100%{transform:translate(-380px,260px) rotate(-32deg);opacity:0}}
+
+  .replay{position:absolute;bottom:max(22px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;color:#6f80ad;
+    border:1px solid #2c3a63;padding:9px 18px;border-radius:30px;opacity:0;background:rgba(10,18,40,.4)}
+
+  .fadein{animation:fade 1.1s forwards}
+  @keyframes fade{to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+  <!-- TAP TO START -->
+  <div id="gate" class="screen">
+    <div class="lock">🔒</div>
+    <div class="tap">НАЖМИ, ЧТОБЫ ВЗЛОМАТЬ</div>
+    <div class="hint">входящий зашифрованный пакет</div>
+  </div>
+
+  <!-- TERMINAL -->
+  <div id="term" class="screen"><div class="out" id="out"></div></div>
+
+  <!-- NIGHT SCENE -->
+  <div id="night" class="screen">
+    <div id="stars"></div>
+    <div id="stars2"></div>
+    <div class="moon"></div>
+    <div class="content">
+      <div class="eyebrow" id="eyebrow">// расшифровано</div>
+      <div class="name" id="name">Мария</div>
+      <div class="wish" id="wish"></div>
+      <div class="sign" id="sign">до связи <span class="heart">:)</span></div>
+    </div>
+    <div class="replay" id="replay" onclick="location.reload()">↺ ещё раз</div>
+  </div>
+
+  <div id="flash" class="screen"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const buzz = p => { try{ navigator.vibrate && navigator.vibrate(p);}catch(e){} };
+
+const out = $('#out');
+function line(txt='', cls=''){
+  const d=document.createElement('div');
+  if(cls) d.className=cls;
+  d.innerHTML=txt; out.appendChild(d); return d;
+}
+async function type(el, txt, sp=22){
+  for(const ch of txt){ el.innerHTML+=ch; await sleep(sp); }
+}
+
+async function runTerminal(){
+  $('#gate').style.display='none';
+  $('#term').style.transition='opacity .3s'; $('#term').style.opacity='1';
+  buzz(20);
+
+  const boot=[
+    ['<span class="dim">$</span> ./midnight --target "Maria" --secure',''],
+    ['[*] инициализация защищённого канала...','dim'],
+    ['[*] резолв узла   ::  m.a.r.i.a@night.local','dim'],
+    ['[+] рукопожатие установлено','ok'],
+    ['[*] обнаружен зашифрованный пакет (AES-256-GCM)','warn'],
+  ];
+  for(const [t,c] of boot){ const e=line('',c); await type(e,t,12); await sleep(180); }
+
+  await sleep(250);
+  line('[*] подбор приватного ключа:','dim');
+  const bw=line('<span class="bar"><span id="bf"></span></span>');
+  const bf=bw.querySelector('#bf');
+  for(let i=0;i<=100;i+=2){ bf.style.width=i+'%'; if(i%20===0)buzz(8); await sleep(28); }
+  line('[+] КЛЮЧ НАЙДЕН :: 0xC0FFEE…MARIA','ok');
+  await sleep(300);
+
+  line('[*] дешифрую полезную нагрузку...','dim');
+  // scramble→resolve effect
+  const scr=line('','warn');
+  const target='█▓▒░ восстановление сообщения ░▒▓█';
+  const pool='01#@%&*<>/\\{}[]ABCDEF░▒▓█';
+  for(let f=0; f<14; f++){
+    let s=''; for(let i=0;i<target.length;i++) s+= f>i? target[i] : pool[(Math.random()*pool.length)|0];
+    scr.textContent=s; await sleep(60);
+  }
+  scr.textContent=target;
+  await sleep(350);
+  line('[+] ЦЕЛОСТНОСТЬ OK · подпись верна','ok');
+  line('<span class="cursor"></span>');
+  buzz([0,40,60,120]);
+  await sleep(700);
+
+  // glitch to night
+  await glitch();
+}
+
+async function glitch(){
+  const f=$('#flash');
+  for(let i=0;i<3;i++){
+    f.style.transition='opacity .05s'; f.style.opacity=String(0.5+Math.random()*0.5);
+    await sleep(50); f.style.opacity='0'; await sleep(40+Math.random()*60);
+  }
+  $('#term').style.transition='opacity .35s'; $('#term').style.opacity='0';
+  f.style.transition='opacity .12s'; f.style.opacity='1'; buzz(30); await sleep(120);
+  const night=$('#night');
+  night.style.transition='opacity 1.2s'; night.style.opacity='1'; night.style.pointerEvents='auto';
+  f.style.transition='opacity .9s'; f.style.opacity='0';
+  await sleep(400);
+  revealNight();
+}
+
+function makeStars(host, n, maxSize){
+  for(let i=0;i<n;i++){
+    const s=document.createElement('div'); s.className='twinkle';
+    const sz=Math.random()*maxSize+0.6;
+    s.style.width=s.style.height=sz+'px';
+    s.style.left=Math.random()*100+'%'; s.style.top=Math.random()*100+'%';
+    s.style.setProperty('--d',(2+Math.random()*4)+'s');
+    s.style.animationDelay=(-Math.random()*5)+'s';
+    host.appendChild(s);
+  }
+}
+
+function shootingStar(){
+  const s=document.createElement('div'); s.className='shoot';
+  s.style.top=(Math.random()*40)+'%'; s.style.left=(60+Math.random()*40)+'%';
+  s.style.animation='shoot '+(1.1+Math.random()*0.6)+'s ease-in forwards';
+  $('#night').appendChild(s);
+  setTimeout(()=>s.remove(),2200);
+}
+
+async function revealNight(){
+  makeStars($('#stars'),90,1.8);
+  makeStars($('#stars2'),28,2.6);
+
+  const eb=$('#eyebrow'), nm=$('#name'), wish=$('#wish'), sign=$('#sign');
+  eb.classList.add('fadein'); await sleep(500);
+  nm.classList.add('fadein'); buzz(40); await sleep(900);
+
+  // typewriter wish, char by char preserving spacing
+  wish.style.opacity='1';
+  const msg='Спокойной ночи, Мария. Надеюсь, этот маленький взлом тебя улыбнул :)';
+  for(const ch of msg){
+    const sp=document.createElement('span'); sp.className='c'; sp.textContent=ch;
+    wish.appendChild(sp); sp.style.transition='opacity .25s'; requestAnimationFrame(()=>sp.style.opacity='1');
+    await sleep(ch===' '?28:48);
+  }
+  await sleep(500);
+  sign.classList.add('fadein'); buzz([0,30,40,80]);
+  await sleep(800);
+  $('#replay').classList.add('fadein');
+
+  // periodic shooting stars
+  shootingStar();
+  setInterval(shootingStar, 3500);
+}
+
+$('#gate').addEventListener('click', runTerminal, {once:true});
+</script>
+</body>
+</html>
